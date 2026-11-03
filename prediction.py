@@ -35,3 +35,5 @@ df = df[
 
 if df.empty:
     raise ValueError("The CSV contains no usable house records.")
+
+#================================= Continue =================================
