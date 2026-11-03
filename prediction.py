@@ -35,5 +35,63 @@ df = df[
 
 if df.empty:
     raise ValueError("The CSV contains no usable house records.")
+df["Region"] = df["Region"].astype(str).str.strip()
+df["Sub-region"] = df["Sub-region"].fillna("Unknown").astype(str).str.strip()
 
+# Display a short overview of the loaded dataset.
+print("\n========== DATASET OVERVIEW ==========")
+print(f"Total usable listings: {len(df)}")
+print("\nFirst five listings:")
+print(df.head())
+
+region_encoder = LabelEncoder()
+df["Region_enc"] = region_encoder.fit_transform(df["Region"])
+
+
+X_price = df[["Price"]]                             # Train The ML Modles
+model_region = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
+model_region.fit(X_price, df["Region_enc"])
+model_beds = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
+model_beds.fit(X_price, df["No. Beds"])
+model_baths = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
+model_baths.fit(X_price, df["No. Baths"])
+X_area = df[["Area"]]
+
+model_price = RandomForestRegressor(
+    n_estimators=100,
+    random_state=42
+)
+model_price.fit(X_area, df["Price"])
+print("\nMachine learning models trained successfully.")
+
+def plot_listings(result, title):                    # Function For Ploting Graphs.
+    if result.empty:
+        print("No results available to plot.")
+        return
+    result = result.copy()
+    result = result.head(10)
+    plt.figure(figsize=(10, 6))
+
+    labels = (
+        result["Region"].astype(str)
+        + " - "
+        + result["Sub-region"].astype(str)
+    )
+    plt.bar(labels, result["Price"])
+    plt.title(title)
+    plt.xlabel("Region and Sub-region")
+    plt.ylabel("Price (Taka)")
+    plt.xticks(rotation=45, ha="right")
+    plt.grid(axis="y", linestyle="--", alpha=0.4)
+    plt.tight_layout()
+    plt.show()
 #================================= Continue =================================
