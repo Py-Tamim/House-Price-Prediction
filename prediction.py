@@ -142,5 +142,77 @@ def plot_listings(result, title):                    # Function For Ploting Grap
         print(result[columns].head(10).to_string(index=False))
         plot_listings(result, f"Houses Near Tk {price:,.0f}")
 
+def predict_from_area(area):
 
+    if area <= 0:
+        print("Area must be greater than zero.")
+        return
+    input_data = pd.DataFrame(
+        {"Area": [area]}
+    )
+
+    predicted_price = model_price.predict(input_data)[0]
+    low_price = predicted_price * 0.85
+    high_price = predicted_price * 1.15
+    low_lakh = low_price / 100000
+    high_lakh = high_price / 100000
+
+    print("\n========== PRICE PREDICTION ==========")
+    print(f"House area: {area:,.0f} sq ft")
+    print(f"Estimated price: Tk {predicted_price:,.0f}")
+    print(
+        f"Estimated range: {low_lakh:.2f} to "
+        f"{high_lakh:.2f} Lakh Taka"
+    )
+    plt.figure(figsize=(8, 5))
+
+    # Draw a bar showing the central predicted price.
+    plt.bar(
+        ["Predicted Price"],
+        [predicted_price],
+        label="Predicted price"
+    )
+    plt.errorbar(
+        ["Predicted Price"],
+        [predicted_price],
+        yerr=[[
+            predicted_price - low_price
+        ], [
+            high_price - predicted_price
+        ]],
+        fmt="none",
+        capsize=10,
+        label="Illustrative +/-15% range"
+    )
+    plt.title(f"Predicted Price for a {area:,.0f} sq ft House")
+    plt.ylabel("Price (Taka)")
+    plt.grid(axis="y", linestyle="--", alpha=0.4)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+low_cut = df["Price"].quantile(0.33)
+high_cut = df["Price"].quantile(0.66)
+def search_by_text(user_text):
+
+    text = user_text.casefold()
+
+    if "low" in text:
+        result = df[df["Price"] <= low_cut].copy()
+        category = "Low-Price Houses"
+    elif "high" in text:
+        result = df[df["Price"] >= high_cut].copy()
+        category = "High-Price Houses"
+    elif "mid" in text or "medium" in text:
+        result = df[
+            (df["Price"] > low_cut)
+            & (df["Price"] < high_cut)
+        ].copy()
+        category = "Mid-Price Houses"
+    else:
+        print(
+            "Please mention low, mid, medium, or high "
+            "in your request."
+        )
+        return
 #================================= Continue =================================
