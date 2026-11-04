@@ -94,4 +94,53 @@ def plot_listings(result, title):                    # Function For Ploting Grap
     plt.grid(axis="y", linestyle="--", alpha=0.4)
     plt.tight_layout()
     plt.show()
+
+    def search_house(user_input):                    # User Input Function (price or region name).
+        user_input = user_input.strip()
+        try:
+            price = float(user_input)
+
+        except ValueError:
+            result = df[
+                df["Region"].str.casefold() == user_input.casefold()
+            ]
+            if result.empty:
+                print("\nNo listings found for this region.")
+                return
+            columns = [
+                "Region", "Sub-region", "Price",
+                "No. Beds", "No. Baths", "Area"
+            ]
+
+            print("\n========== REGION SEARCH RESULTS ==========")
+            print(result[columns].head(10).to_string(index=False))
+            plot_listings(result, f"Houses in {user_input}")
+            return
+
+        if price <= 0:
+            print("Please enter a price greater than zero.")
+            return
+        tolerance = 100000
+        result = df[
+            (df["Price"] >= price - tolerance)
+            & (df["Price"] <= price + tolerance)
+        ].copy()
+
+        if result.empty:
+            print("\nNo listings found near this price.")
+            return
+        result["Price_Difference"] = (
+            result["Price"] - price
+        ).abs()
+
+        result = result.sort_values("Price_Difference")
+        columns = [
+            "Region", "Sub-region", "Price",
+            "No. Beds", "No. Baths", "Area"
+        ]
+        print("\n========== PRICE SEARCH RESULTS ==========")
+        print(result[columns].head(10).to_string(index=False))
+        plot_listings(result, f"Houses Near Tk {price:,.0f}")
+
+
 #================================= Continue =================================
