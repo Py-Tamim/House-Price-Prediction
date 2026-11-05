@@ -191,12 +191,12 @@ def predict_from_area(area):
     plt.tight_layout()
     plt.show()
 
-low_cut = df["Price"].quantile(0.33)
+
+low_cut = df["Price"].quantile(0.33)              # Low, mid & high price search
 high_cut = df["Price"].quantile(0.66)
+
 def search_by_text(user_text):
-
     text = user_text.casefold()
-
     if "low" in text:
         result = df[df["Price"] <= low_cut].copy()
         category = "Low-Price Houses"
@@ -215,4 +215,71 @@ def search_by_text(user_text):
             "in your request."
         )
         return
-#================================= Continue =================================
+    region_filter = None
+    for region in df["Region"].unique():
+        if region.casefold() in text:
+            region_filter = region
+            break
+    if region_filter:
+        result = result[
+            result["Region"].str.casefold()
+            == region_filter.casefold()
+        ]
+    result = result.drop_duplicates(
+        subset=["Region", "Sub-region"]
+    )
+    result = result.sort_values("Price")
+    columns = [
+        "Region", "Sub-region", "Price",
+        "No. Beds", "No. Baths", "Area"
+    ]
+    print(f"\n========== {category.upper()} ==========")
+    print(f"Low-price threshold: Tk {low_cut:,.0f}")
+    print(f"High-price threshold: Tk {high_cut:,.0f}")
+    if region_filter:
+        print(f"Region filter: {region_filter}")
+    if result.empty:
+        print("No matching houses were found.")
+        return
+    print(result[columns].head(10).to_string(index=False))
+    plot_listings(result, category)
+
+def main():
+    while True:                                 # Continious Loop of output
+        print("\n==========================================")
+        print("     HOUSE PRICE PREDICTION SYSTEM")
+        print("==========================================")
+        print("1. Search houses by price or region")
+        print("2. Predict price from area")
+        print("3. Search low-, mid-, or high-price houses")
+        print("4. Exit")
+        choice = input("\nEnter your choice (1-4): ").strip()
+
+        if choice == "1":
+            user_input = input(
+                "Enter a price in Taka or a region name: "
+            )
+            search_house(user_input)
+        elif choice == "2":
+            try:
+                area = float(
+                    input("Enter house area in sq ft: ")
+                )
+                predict_from_area(area)
+
+            except ValueError:                    # raise value error if an invalid area is entered.
+                print("Please enter a valid numeric area.")
+        elif choice == "3":
+            user_text = input(
+                "Describe the house you want "
+                "(e.g., low price house in Mirpur): "
+            )
+            search_by_text(user_text)
+        elif choice == "4":
+            print("Thank you for using the House Price Prediction System.")
+            break
+        else:
+            print("Invalid choice. Please select 1, 2, 3, or 4.")
+
+if __name__ == "__main__":             # Run the main function if this script is executed directly.
+    main()
